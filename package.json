@@ -32,6 +32,9 @@
           },
           {
             "filenamePattern": "*.npz"
+          },
+          {
+            "filenamePattern": "*.safetensors"
           }
         ]
       }
@@ -80,6 +83,16 @@
         },
         {
           "when": "resourceExtname == .npz",
+          "command": "numpy-viewer.showArrayShape",
+          "group": "navigation"
+        },
+        {
+          "when": "resourceExtname == .safetensors",
+          "command": "numpy-viewer.openTableView",
+          "group": "navigation"
+        },
+        {
+          "when": "resourceExtname == .safetensors",
           "command": "numpy-viewer.showArrayShape",
           "group": "navigation"
         }

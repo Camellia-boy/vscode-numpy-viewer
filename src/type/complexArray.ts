@@ -7,7 +7,7 @@ class Complex {
 
     public toString = () : string => {
         return `${this.real}+${this.virtual}j`;
-    }
+    };
 }
 
 class ComplexArray implements RelativeIndexable<Complex>{
@@ -20,9 +20,9 @@ class ComplexArray implements RelativeIndexable<Complex>{
         this.buffer = buffer;
         this.offset = offset;
 
-        var temp_data = new Float64Array(buffer, offset)
-        for (var i = 0; i < Math.ceil(temp_data.length / 2); i++) {
-            const ele: Complex = new Complex(temp_data[2*i], temp_data[2*i+1]);
+        var tempData = new Float64Array(buffer, offset);
+        for (var i = 0; i < Math.ceil(tempData.length / 2); i++) {
+            const ele: Complex = new Complex(tempData[2*i], tempData[2*i+1]);
             this.data.push(ele);
         }
     }

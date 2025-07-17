@@ -8,3 +8,7 @@ np.save('fp16_array.npy', fp16_array)
 # save a .npz file with fp16
 fp16_array2 = np.array([4.0, 5.0, 6.0], dtype=np.float16)
 np.savez('fp16_array.npz', a=fp16_array, b=fp16_array2)
+
+# create safetensors file with fp16
+import safetensors.numpy as st
+st.save_file({'fp16_array': fp16_array}, 'fp16_array.safetensors')

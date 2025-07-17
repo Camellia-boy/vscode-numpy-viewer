@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 
 import { fromArrayBuffer, loadArrayBuffer, loadBuffer, getFileSize } from './numpyParser';
+import * as safetensors from './safetensorsParser';
 import { Disposable } from './disposable';
 import { OSUtils, toCLikeArray, toMultiDimArray, show2DArr, multiArrayToString, wrapWithSqBr, contentFormatting, getOption, setPrecision } from './utils';
 import { updateStatusBarText } from './extension';
@@ -117,7 +118,7 @@ export class NumpyPreview extends Disposable {
       vscode.window.showInformationMessage("File too large (> 50MB)");
       return 'File too large (> 50MB), another extension <a href="https://marketplace.visualstudio.com/items?itemName=Percy.vscode-pydata-viewer" target="_blank">vscode-pydata-viewer</a>  may be helpful.';
     }
-    if (path.endsWith('npz')) {
+    if (path.endsWith('.npz')) {
       // Solve .npz file
       // comments are taken from https://docs.scipy.org/doc/numpy-1.14.1/neps/npy-format.html#format-specification-version-1-0
       // For a simple way to combine multiple arrays into a single file, one can use ZipFile to contain multiple “.npy” files. 
@@ -137,22 +138,36 @@ export class NumpyPreview extends Disposable {
       var contents: Array<string> = [];
       for (var i = 0; i < zipEntries.length; i++) {
         contents.push(names[i]);
-        var {content: temp_content, shapeLength: sl}=  this.bufferToString(buffers[i], tableViewFlag, tableCss);
+        var {content: tempContent, shapeLength: sl}=  this.bufferToString(buffers[i], tableViewFlag, tableCss);
         if (sl >= 2) {
-          temp_content = contentFormatting(temp_content, sl);
+          tempContent = contentFormatting(tempContent, sl);
         }
-        contents.push(temp_content);
-        shape += `${names[i]} (${fromArrayBuffer(buffers[i]).shape}) `
+        contents.push(tempContent);
+        shape += `${names[i]} (${fromArrayBuffer(buffers[i]).shape}) `;
       }
       content = contents.join(`<p/>`);
+    } else if (path.endsWith('.safetensors')) {
+        const arrayBuffer = loadArrayBuffer(path);
+        const tensors: {[key: string]: {data: DataView, shape: number[], dtype: string}} = safetensors.fromArrayBuffer(arrayBuffer);
+        var contents: Array<string> = [];
+        for (const key in tensors) {
+            contents.push(key);
+            const { data, shape, dtype } = tensors[key];
+            let {content: tempContent, shapeLength: sl}=  this.safetensorsToString({data, shape, dtype}, tableViewFlag, tableCss);
+            if (sl >= 2) {
+                tempContent = contentFormatting(tempContent, sl);
+            }
+            contents.push(tempContent);
+        }
+        content = contents.join(`<p/>`);
     }
     else {
       const arrayBuffer = loadArrayBuffer(path);
-      var {content: temp_content, shapeLength: sl}=  this.bufferToString(arrayBuffer, tableViewFlag, tableCss);
+      var {content: tempContent, shapeLength: sl}=  this.bufferToString(arrayBuffer, tableViewFlag, tableCss);
       if (sl >= 2) {
-        temp_content = contentFormatting(temp_content, sl);
+        tempContent = contentFormatting(tempContent, sl);
       }
-      content = temp_content;
+      content = tempContent;
       shape += `(${fromArrayBuffer(arrayBuffer).shape}) `;
     }
 
@@ -185,9 +200,144 @@ export class NumpyPreview extends Disposable {
     return output;
   }
 
+  private static safetensorsToString(tensor: {data: DataView, shape: number[], dtype: string}, tableViewFlag: boolean, tableCss: string) {
+    const { data, shape, dtype } = tensor;
+    
+    if (tableViewFlag && shape.length > 2) {
+      return {content: `<div>Table view just support 1D or 2D array now</div>`, shapeLength: 0};
+    }
+
+    // Convert DataView to typed array based on dtype
+    let array: any;
+    const totalElements = shape.reduce((acc, dim) => acc * dim, 1);
+    
+    switch (dtype) {
+      case 'F64':
+        array = new Float64Array(data.buffer, data.byteOffset, totalElements);
+        break;
+      case 'F32':
+        array = new Float32Array(data.buffer, data.byteOffset, totalElements);
+        break;
+      case 'F16':
+        // For F16, we need to read as Uint16 and convert to float
+        const f16Array = new Uint16Array(data.buffer, data.byteOffset, totalElements);
+        array = new Float32Array(totalElements);
+        for (let i = 0; i < totalElements; i++) {
+          array[i] = this.float16ToFloat32(f16Array[i]);
+        }
+        break;
+      case 'BF16':
+        // For BF16, we need to read as Uint16 and convert to float
+        const bf16Array = new Uint16Array(data.buffer, data.byteOffset, totalElements);
+        array = new Float32Array(totalElements);
+        for (let i = 0; i < totalElements; i++) {
+          array[i] = this.bfloat16ToFloat32(bf16Array[i]);
+        }
+        break;
+      case 'I64':
+        array = new BigInt64Array(data.buffer, data.byteOffset, totalElements);
+        break;
+      case 'U64':
+        array = new BigUint64Array(data.buffer, data.byteOffset, totalElements);
+        break;
+      case 'I32':
+        array = new Int32Array(data.buffer, data.byteOffset, totalElements);
+        break;
+      case 'U32':
+        array = new Uint32Array(data.buffer, data.byteOffset, totalElements);
+        break;
+      case 'I16':
+        array = new Int16Array(data.buffer, data.byteOffset, totalElements);
+        break;
+      case 'U16':
+        array = new Uint16Array(data.buffer, data.byteOffset, totalElements);
+        break;
+      case 'I8':
+        array = new Int8Array(data.buffer, data.byteOffset, totalElements);
+        break;
+      case 'U8':
+        array = new Uint8Array(data.buffer, data.byteOffset, totalElements);
+        break;
+      case 'BOOL':
+        array = new Uint8Array(data.buffer, data.byteOffset, totalElements);
+        break;
+      default:
+        throw new Error(`Unsupported safetensors dtype: ${dtype}`);
+    }
+
+    // Apply precision formatting for float types
+    if (dtype.startsWith('F') || dtype.startsWith('BF')) {
+      array = setPrecision(array);
+    }
+
+    var content: string = '';
+    
+    // Create multi-dim array display
+    console.log('[+] Safetensors array shape is', shape);
+
+    if (shape.length === 0) {
+      return {content: array.toString(), shapeLength: shape.length};
+    }
+
+    if (shape.length > 1) {
+      // For multi dim arrays, use the same logic as numpy arrays
+      var multiArr = toMultiDimArray(array, shape);
+      switch (shape.length) {
+        case 2:
+          if (tableViewFlag) {
+            console.log('[*] Table view enabled, create html table');
+            content = show2DArr(multiArr);
+          }
+          else {
+            content = multiArrayToString(multiArr, shape);
+          }
+          break;
+        default:
+          content = multiArrayToString(multiArr, shape);
+      }
+    } else {
+      // For 1D array
+      if (tableViewFlag) {
+        // Support single dim table view
+        var multiArr = toMultiDimArray(array, [shape[0], 1]);
+        content = show2DArr(multiArr);
+      } else {
+        content = wrapWithSqBr(array.toString());
+      }
+    }
+    
+    return {content: content, shapeLength: shape.length};
+  }
+
+  // Helper methods for float16 and bfloat16 conversion
+  private static float16ToFloat32(f16: number): number {
+    const sign = (f16 & 0x8000) >> 15;
+    const exp = (f16 & 0x7C00) >> 10;
+    const mant = f16 & 0x03FF;
+
+    if (exp === 0) {
+      return sign === 0 ? Math.pow(2, -24) * mant : -Math.pow(2, -24) * mant;
+    } else if (exp === 31) {
+      return mant === 0 ? (sign === 0 ? Infinity : -Infinity) : NaN;
+    } else {
+      return sign === 0 
+        ? Math.pow(2, exp - 15) * (1 + mant / 1024)
+        : -Math.pow(2, exp - 15) * (1 + mant / 1024);
+    }
+  }
+
+  private static bfloat16ToFloat32(bf16: number): number {
+    // BF16 format: 1 sign bit, 8 exponent bits, 7 mantissa bits
+    const buffer = new ArrayBuffer(4);
+    const view = new DataView(buffer);
+    // BF16 to F32: extend mantissa with zeros
+    view.setUint32(0, bf16 << 16);
+    return view.getFloat32(0);
+  }
+
   private static bufferToString(arrayBuffer: ArrayBuffer, tableViewFlag: boolean, tableCss: string) {
     var { data: array, shape: arrayShape, order: order, decr: arrDecr } = fromArrayBuffer(arrayBuffer);
-    if (arrDecr.startsWith('float')) array = setPrecision(array);
+    if (arrDecr.startsWith('float')) { array = setPrecision(array); }
     if (tableViewFlag && arrayShape.length > 2) {
       return {content: `<div>Table view just support 1D or 2D array now</div>`, shapeLength: 0};
     }

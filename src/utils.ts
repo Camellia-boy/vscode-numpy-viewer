@@ -29,7 +29,7 @@ export function getResourcePath(webview: vscode.Webview, context: vscode.Extensi
     //fix for windows because there path.join will use \ as separator and when we inline this string in html/js
     //we get specials strings e.g. c:\n
     // return `vscode-resource:${path.join(context.extensionPath, filePath).replace(/\\/g, '/')}`
-    return `${webview.asWebviewUri(vscode.Uri.file(path.join(context.extensionPath, filePath).replace(/\\/g, '/')))}`
+    return `${webview.asWebviewUri(vscode.Uri.file(path.join(context.extensionPath, filePath).replace(/\\/g, '/')))}`;
 }
 
 export function toFortranAbsoluteIndex(absoluteIdx: number, shape: number[]) {
@@ -100,7 +100,7 @@ export function makeTableHTML(myArray: any, style = 'fixed_headers') {
     // Add table head, the first column for row ID
     var colContent = '';
     for (var i = 0; i < colNum; i++) {
-        colContent += `<th>col ${i.toString()}</th>`
+        colContent += `<th>col ${i.toString()}</th>`;
     }
     var tableHead =
         `<thead>
@@ -109,7 +109,7 @@ export function makeTableHTML(myArray: any, style = 'fixed_headers') {
       ${colContent}
       </tr>
       </thead>
-      `
+      `;
     // Add table body
     var rowContent = '';
     for (var i = 0; i < rowNum; i++) {
@@ -123,7 +123,7 @@ export function makeTableHTML(myArray: any, style = 'fixed_headers') {
         `<tbody>
     ${rowContent}
     </tbody>
-    `
+    `;
     return `<table class=${style}>
     ${tableHead}
     ${tableBody}
@@ -171,6 +171,6 @@ export function getOption(option: string) {
 export function setPrecision(data: any) {
     data = data as Float32Array | Float64Array;
     let precision : number = getOption('vscode-numpy-viewer.printPrecision') as number;
-    if (precision > 0) for (var i = 0; i < data.length; i++) data[i] = parseFloat(data[i].toFixed(precision));
+    if (precision > 0) { for (var i = 0; i < data.length; i++) { data[i] = parseFloat(data[i].toFixed(precision)); } }
     return data;
 }
