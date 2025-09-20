@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { NumpyPreview } from './numpyPreview';
 
 export class NumpyCustomProvider implements vscode.CustomReadonlyEditorProvider {
-  public static readonly viewType = 'numpy.preview';
+  public static readonly viewType = 'numpy-simple.preview';
   public static readonly supportedExtensions = ['.npy', '.npz', '.safetensors'];
 
   private readonly _previews = new Set<NumpyPreview>();

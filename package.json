@@ -1,8 +1,8 @@
 {
-  "name": "vscode-numpy-viewer",
-  "displayName": "vscode-numpy-viewer",
-  "description": "Display (binary) .npy or .npz files in VSCode.",
-  "publisher": "Percy",
+  "name": "vscode-numpy-viewer-simple",
+  "displayName": "vscode-numpy-viewer-simple",
+  "description": "Display (binary) .npy or .npz files in VSCode. Based on numpy-viewer but adds shape info in status bar and only show ten rows in table view.",
+  "publisher": "SunYingkai",
   "version": "0.1.10",
   "icon": "images/icon.png",
   "engines": {
@@ -18,14 +18,14 @@
     "Other"
   ],
   "activationEvents": [
-    "onCustomEditor:numpy.preview"
+    "onCustomEditor:numpy-simple.preview"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "customEditors": [
       {
-        "viewType": "numpy.preview",
-        "displayName": "Numpy Preview",
+        "viewType": "numpy-simple.preview",
+        "displayName": "Numpy Preview Simple",
         "selector": [
           {
             "filenamePattern": "*.npy"
@@ -41,7 +41,7 @@
     ],
     "commands": [
       {
-        "command": "numpy-viewer.openTableView",
+        "command": "numpy-viewer-simple.openTableView",
         "title": "Open Table View",
         "category": "NumpyViewer",
         "icon": {
@@ -50,7 +50,7 @@
         }
       },
       {
-        "command": "numpy-viewer.showArrayShape",
+        "command": "numpy-viewer-simple.showArrayShape",
         "title": "Show Array Shape",
         "category": "NumpyViewer",
         "icon": {
@@ -59,7 +59,7 @@
         }
       },
       {
-        "command": "numpy-viewer.showArrayShapeOnBar",
+        "command": "numpy-viewer-simple.showArrayShapeOnBar",
         "title": "Show Array Shape on the Status Bar",
         "category": "NumpyViewer"
       }
@@ -68,46 +68,46 @@
       "editor/title": [
         {
           "when": "resourceExtname == .npy",
-          "command": "numpy-viewer.openTableView",
+          "command": "numpy-viewer-simple.openTableView",
           "group": "navigation"
         },
         {
           "when": "resourceExtname == .npz",
-          "command": "numpy-viewer.openTableView",
+          "command": "numpy-viewer-simple.openTableView",
           "group": "navigation"
         },
         {
           "when": "resourceExtname == .npy",
-          "command": "numpy-viewer.showArrayShape",
+          "command": "numpy-viewer-simple.showArrayShape",
           "group": "navigation"
         },
         {
           "when": "resourceExtname == .npz",
-          "command": "numpy-viewer.showArrayShape",
+          "command": "numpy-viewer-simple.showArrayShape",
           "group": "navigation"
         },
         {
           "when": "resourceExtname == .safetensors",
-          "command": "numpy-viewer.openTableView",
+          "command": "numpy-viewer-simple.openTableView",
           "group": "navigation"
         },
         {
           "when": "resourceExtname == .safetensors",
-          "command": "numpy-viewer.showArrayShape",
+          "command": "numpy-viewer-simple.showArrayShape",
           "group": "navigation"
         }
       ]
     },
     "configuration": [
       {
-        "title": "vscode-numpy-viewer configuration",
+        "title": "vscode-numpy-viewer-simple configuration",
         "properties": {
-          "vscode-numpy-viewer.fortran2CLikeOrder": {
+          "vscode-numpy-viewer-simple.fortran2CLikeOrder": {
             "type": "boolean",
             "default": true,
             "description": "Convert fortran array to C like array otherwise just output the transposed array. e.g. [[1, 2, 3], [4, 5, 6]] if true, output is [[1, 2, 3], [4, 5, 6]], otherwise output is [[1, 4], [2, 5], [3, 6]]."
           },
-          "vscode-numpy-viewer.printPrecision": {
+          "vscode-numpy-viewer-simple.printPrecision": {
             "type": "integer",
             "default": -1,
             "description": "Set the print precision for the numbers in array. (-1 means no limit)"

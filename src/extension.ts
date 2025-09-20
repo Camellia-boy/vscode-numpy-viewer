@@ -46,7 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
 		panel.webview.html = HTML;
 	}
 
-	const tableViewCommmand = vscode.commands.registerCommand('numpy-viewer.openTableView', openTableView,);
+	const tableViewCommmand = vscode.commands.registerCommand('numpy-viewer-simple.openTableView', openTableView,);
 	context.subscriptions.push(tableViewCommmand,);
 
 	async function showArrayShape(uri?: vscode.Uri) {
@@ -59,7 +59,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 	
 
-	const arrayShapeCommmand = vscode.commands.registerCommand('numpy-viewer.showArrayShape', showArrayShape,);
+	const arrayShapeCommmand = vscode.commands.registerCommand('numpy-viewer-simple.showArrayShape', showArrayShape,);
 	context.subscriptions.push(arrayShapeCommmand,);
 }
 

@@ -137,13 +137,15 @@ export class NumpyPreview extends Disposable {
       });
       var contents: Array<string> = [];
       for (var i = 0; i < zipEntries.length; i++) {
-        contents.push(names[i]);
-        var {content: tempContent, shapeLength: sl}=  this.bufferToString(buffers[i], tableViewFlag, tableCss);
+        const arrayInfo = fromArrayBuffer(buffers[i]);
+        const shapeStr = arrayInfo.shape.join(', ');
+        contents.push(`<h3>${names[i]} - Shape: (${shapeStr})</h3>`);
+        var {content: tempContent, shapeLength: sl}=  this.bufferToString(buffers[i], tableViewFlag, tableCss, tableViewFlag);
         if (sl >= 2) {
           tempContent = contentFormatting(tempContent, sl);
         }
         contents.push(tempContent);
-        shape += `${names[i]} (${fromArrayBuffer(buffers[i]).shape}) `;
+        shape += `${names[i]} (${arrayInfo.shape}) `;
       }
       content = contents.join(`<p/>`);
     } else if (path.endsWith('.safetensors')) {
@@ -151,9 +153,10 @@ export class NumpyPreview extends Disposable {
         const tensors: {[key: string]: {data: DataView, shape: number[], dtype: string}} = safetensors.fromArrayBuffer(arrayBuffer);
         var contents: Array<string> = [];
         for (const key in tensors) {
-            contents.push(key);
+            const shapeStr = tensors[key].shape.join(', ');
+            contents.push(`<h3>${key} - Shape: (${shapeStr})</h3>`);
             const { data, shape, dtype } = tensors[key];
-            let {content: tempContent, shapeLength: sl}=  this.safetensorsToString({data, shape, dtype}, tableViewFlag, tableCss);
+            let {content: tempContent, shapeLength: sl}=  this.safetensorsToString({data, shape, dtype}, tableViewFlag, tableCss, tableViewFlag);
             if (sl >= 2) {
                 tempContent = contentFormatting(tempContent, sl);
             }
@@ -163,7 +166,7 @@ export class NumpyPreview extends Disposable {
     }
     else {
       const arrayBuffer = loadArrayBuffer(path);
-      var {content: tempContent, shapeLength: sl}=  this.bufferToString(arrayBuffer, tableViewFlag, tableCss);
+      var {content: tempContent, shapeLength: sl}=  this.bufferToString(arrayBuffer, tableViewFlag, tableCss, tableViewFlag);
       if (sl >= 2) {
         tempContent = contentFormatting(tempContent, sl);
       }
@@ -200,7 +203,7 @@ export class NumpyPreview extends Disposable {
     return output;
   }
 
-  private static safetensorsToString(tensor: {data: DataView, shape: number[], dtype: string}, tableViewFlag: boolean, tableCss: string) {
+  private static safetensorsToString(tensor: {data: DataView, shape: number[], dtype: string}, tableViewFlag: boolean, tableCss: string, limitRows: boolean = false) {
     const { data, shape, dtype } = tensor;
     
     if (tableViewFlag && shape.length > 2) {
@@ -281,12 +284,13 @@ export class NumpyPreview extends Disposable {
 
     if (shape.length > 1) {
       // For multi dim arrays, use the same logic as numpy arrays
-      var multiArr = toMultiDimArray(array, shape);
+      var multiArr = toMultiDimArray(array, shape, tableViewFlag && limitRows);
       switch (shape.length) {
         case 2:
           if (tableViewFlag) {
             console.log('[*] Table view enabled, create html table');
-            content = show2DArr(multiArr);
+            const maxRows = limitRows ? 10 : -1;
+            content = show2DArr(multiArr, maxRows);
           }
           else {
             content = multiArrayToString(multiArr, shape);
@@ -299,9 +303,11 @@ export class NumpyPreview extends Disposable {
       // For 1D array
       if (tableViewFlag) {
         // Support single dim table view
-        var multiArr = toMultiDimArray(array, [shape[0], 1]);
-        content = show2DArr(multiArr);
+        var multiArr = toMultiDimArray(array, [shape[0], 1], limitRows);
+        const maxRows = limitRows ? 10 : -1;
+        content = show2DArr(multiArr, maxRows);
       } else {
+        // For normal display, don't limit elements
         content = wrapWithSqBr(array.toString());
       }
     }
@@ -335,7 +341,7 @@ export class NumpyPreview extends Disposable {
     return view.getFloat32(0);
   }
 
-  private static bufferToString(arrayBuffer: ArrayBuffer, tableViewFlag: boolean, tableCss: string) {
+  private static bufferToString(arrayBuffer: ArrayBuffer, tableViewFlag: boolean, tableCss: string, limitRows: boolean = false) {
     var { data: array, shape: arrayShape, order: order, decr: arrDecr } = fromArrayBuffer(arrayBuffer);
     if (arrDecr.startsWith('float')) { array = setPrecision(array); }
     if (tableViewFlag && arrayShape.length > 2) {
@@ -355,7 +361,7 @@ export class NumpyPreview extends Disposable {
       // For multi dim
       console.log('[*] Process to show structure');
       if (order === 'F') {
-        if (getOption('vscode-numpy-viewer.fortran2CLikeOrder')) {
+        if (getOption('vscode-numpy-viewer-simple.fortran2CLikeOrder')) {
           // Process to get C-like array
           // TODO: optim performance
           array = toCLikeArray(array, arrayShape);
@@ -366,12 +372,13 @@ export class NumpyPreview extends Disposable {
         }
       } 
 
-      var multiArr = toMultiDimArray(array, arrayShape);
+      var multiArr = toMultiDimArray(array, arrayShape, tableViewFlag && limitRows);
       switch (arrayShape.length) {
         case 2:
           if (tableViewFlag) {
             console.log('[*] Table view enabled, create html table');
-            content = show2DArr(multiArr);
+            const maxRows = limitRows ? 10 : -1;
+            content = show2DArr(multiArr, maxRows);
           }
           else {
             content = multiArrayToString(multiArr, arrayShape);
@@ -385,9 +392,11 @@ export class NumpyPreview extends Disposable {
       // For single dim
       if (tableViewFlag) {
         // Support single dim table view
-        var multiArr = toMultiDimArray(array, [arrayShape[0], 1]);
-        content = show2DArr(multiArr);
+        var multiArr = toMultiDimArray(array, [arrayShape[0], 1], limitRows);
+        const maxRows = limitRows ? 10 : -1;
+        content = show2DArr(multiArr, maxRows);
       } else {
+        // For normal display, don't limit elements
         content = wrapWithSqBr(array.toString());
       }
     }

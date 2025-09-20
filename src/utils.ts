@@ -93,10 +93,12 @@ export function contentFormatting(content: string, sl: number) {
     return res;
 }
 
-export function makeTableHTML(myArray: any, style = 'fixed_headers') {
+export function makeTableHTML(myArray: any, style = 'fixed_headers', maxRows: number = -1) {
     // Get table size
     const colNum = myArray[0].length;
-    const rowNum = myArray.length;
+    const rowNum = maxRows > 0 ? Math.min(myArray.length, maxRows) : myArray.length;
+    const actualRowNum = myArray.length;
+    
     // Add table head, the first column for row ID
     var colContent = '';
     for (var i = 0; i < colNum; i++) {
@@ -110,6 +112,7 @@ export function makeTableHTML(myArray: any, style = 'fixed_headers') {
       </tr>
       </thead>
       `;
+    
     // Add table body
     var rowContent = '';
     for (var i = 0; i < rowNum; i++) {
@@ -119,6 +122,12 @@ export function makeTableHTML(myArray: any, style = 'fixed_headers') {
         }
         rowContent += `<tr>${currentRow}</tr>`;
     }
+    
+    // Add info about truncated rows if applicable
+    if (maxRows > 0 && actualRowNum > maxRows) {
+        rowContent += `<tr><td colspan="${colNum + 1}" style="text-align: center; font-style: italic; color: #666;">... ${actualRowNum - maxRows} more rows (showing first ${maxRows} rows)</td></tr>`;
+    }
+    
     var tableBody =
         `<tbody>
     ${rowContent}
@@ -130,31 +139,42 @@ export function makeTableHTML(myArray: any, style = 'fixed_headers') {
     </table>`;
 }
 
-export function show2DArr(array: any) {
+export function show2DArr(array: any, maxRows: number = -1) {
     // Show array in an table
     // TODO: prettify it
-    const tableHTML = makeTableHTML(array);
+    const tableHTML = makeTableHTML(array, 'fixed_headers', maxRows);
     return tableHTML;
 }
 
-export function toMultiDimArray(array: any, shape: any) {
+export function toMultiDimArray(array: any, shape: any, limitDimensions: boolean = false) {
     if (shape.length > 1) {
-        const pieceNum: number = shape[0];
-        const pieceSize: number = array.length / pieceNum;
+        const pieceNum: number = limitDimensions ? Math.min(shape[0], 10) : shape[0];
+        const pieceSize: number = array.length / shape[0];
         var res = new Array(pieceNum);
         for (var i = 0; i < pieceNum; i++) {
             const begin = i * pieceSize;
-            const end = array.length - (pieceNum - i - 1) * pieceSize;
+            const end = array.length - (shape[0] - i - 1) * pieceSize;
             if (pieceSize !== 1) {
-                res[i] = toMultiDimArray(array.slice(begin, end), shape.slice(1, shape.length));
+                res[i] = toMultiDimArray(array.slice(begin, end), shape.slice(1, shape.length), limitDimensions);
             } else {
-                res[i] = new Array([toMultiDimArray(array.slice(begin, end), shape.slice(1, shape.length))]);
+                res[i] = new Array([toMultiDimArray(array.slice(begin, end), shape.slice(1, shape.length), limitDimensions)]);
             }
-            
         }
+        
+        // Add truncation indicator if needed
+        if (limitDimensions && shape[0] > 10) {
+            res.push(`... ${shape[0] - 10} more elements`);
+        }
+        
         return res;
     }
     else {
+        // For 1D array, limit to 10 elements if requested
+        if (limitDimensions && array.length > 10) {
+            const limitedArray = Array.from(array.slice(0, 10));
+            limitedArray.push(`... ${array.length - 10} more elements`);
+            return limitedArray;
+        }
         return array;
     }
 }
@@ -170,7 +190,7 @@ export function getOption(option: string) {
 
 export function setPrecision(data: any) {
     data = data as Float32Array | Float64Array;
-    let precision : number = getOption('vscode-numpy-viewer.printPrecision') as number;
+    let precision : number = getOption('vscode-numpy-viewer-simple.printPrecision') as number;
     if (precision > 0) { for (var i = 0; i < data.length; i++) { data[i] = parseFloat(data[i].toFixed(precision)); } }
     return data;
 }
