@@ -1,3 +1,11 @@
+/**
+ * VSCode NumPy Viewer Simple - Preview Module
+ * Enhanced data visualization with shape information and limited row display
+ *
+ * Copyright (c) 2024 SunYingkai
+ * Licensed under the MIT License
+ */
+
 import * as vscode from 'vscode';
 
 import { fromArrayBuffer, loadArrayBuffer, loadBuffer, getFileSize } from './numpyParser';

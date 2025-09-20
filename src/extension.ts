@@ -1,3 +1,14 @@
+/**
+ * VSCode NumPy Viewer Simple
+ * Enhanced version for viewing .npy, .npz, and .safetensors files
+ * 
+ * Copyright (c) 2024 SunYingkai
+ * Licensed under the MIT License
+ * 
+ * Based on the original vscode-numpy-viewer by Percy
+ * Enhanced with improved data visualization and shape information display
+ */
+
 import * as vscode from 'vscode';
 import { NumpyPreview } from './numpyPreview';
 import { NumpyCustomProvider } from './numpyProvider';

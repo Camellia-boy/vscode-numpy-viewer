@@ -1,16 +1,21 @@
 # Numpy file viewer
+# VSCode NumPy Viewer Simple
 
-[![Version](https://img.shields.io/visual-studio-marketplace/v/Percy.vscode-numpy-viewer?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=Percy.vscode-numpy-viewer)
-[![Installs](https://img.shields.io/visual-studio-marketplace/i/Percy.vscode-numpy-viewer?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=Percy.vscode-numpy-viewer)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
-[![Build and Test](https://github.com/haochengxia/vscode-numpy-viewer/workflows/Build%20&%20Test/badge.svg)](https://github.com/haochengxia/vscode-numpy-viewer/actions/workflows/build-and-test.yml)
 
-<!-- [![Downloads](https://img.shields.io/visual-studio-marketplace/d/Percy.vscode-numpy-viewer?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=Percy.vscode-numpy-viewer) -->
-<!-- [![Rating](https://img.shields.io/visual-studio-marketplace/r/Percy.vscode-numpy-viewer?style=flat-square&token=)](https://marketplace.visualstudio.com/items?itemName=Percy.vscode-numpy-viewer) -->
+> Enhanced version of vscode-numpy-viewer with improved data visualization
 
 > ! Displaying very large arrays (e.g., size > 10,000,000) is not currently supported.
 
-Display (binary) `.npy` or `.npz` files in VSCode.
+Display (binary) `.npy` or `.npz` files in VSCode with enhanced features.
+
+## New Features in Simple Version
+
+- ✅ **Shape Information Display**: Shows array dimensions for each file in `.npz` archives
+- ✅ **Limited Row Display**: Shows only first 10 rows/elements for better performance and readability
+- ✅ **Enhanced Table View**: Improved table display with truncation indicators
+- ✅ **Multi-dimensional Limiting**: Limits display in all dimensions, not just rows
 
 ![img](https://github.com/haochengxia/vscode-numpy-viewer/blob/screenshot/screenshot.gif?raw=true)
 
@@ -78,3 +83,11 @@ Refer: [numpy/typing/tests/data/pass/scalars.py](https://github.com/numpy/numpy/
 - [ludwigschubert/js-numpy-parser](https://github.com/ludwigschubert/js-numpy-parser)
 - [tomoki1207/vscode-pdfviewer](https://github.com/tomoki1207/vscode-pdfviewer)
 - [janisdd/vscode-edit-csv](https://github.com/janisdd/vscode-edit-csv)
+
+## Copyright and License
+
+Copyright (c) 2024 SunYingkai
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+Based on the original [vscode-numpy-viewer](https://github.com/haochengxia/vscode-numpy-viewer) by Percy, enhanced with improved data visualization features.
